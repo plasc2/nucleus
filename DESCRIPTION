@@ -1,6 +1,6 @@
 Package: nucleus
 Title: Core functions for PLASC2 Nucleus program
-Version: 1
+Version: 1.0
 Authors@R: 
     person("Jonah", "Remigio", , "jonah.m.remigio@gmail.com", role = c("aut", "cre"))
 Description: Runs core functions for PLASC2 Nucleus program.

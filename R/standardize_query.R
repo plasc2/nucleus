@@ -299,8 +299,8 @@ standardize_query <- function(query) {
       } else if (stringr::word(query, -1) == "COUNTY") {
         t.reference <- suppressMessages(tigris::counties(state = t.container, year = 2020, cb = TRUE))
         return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMELSAD) == query],
-                 GEOGRAPHY = "Place",
-                 LEVEL = k.geographies$LEVEL[k.geographies$GEOGRAPHY == "Place"],
+                 GEOGRAPHY = "County",
+                 LEVEL = k.geographies$LEVEL[k.geographies$GEOGRAPHY == "County"],
                  GEOID = t.reference$GEOID[toupper(t.reference$NAMELSAD) == query],
                  STATE = t.container))
       } else {

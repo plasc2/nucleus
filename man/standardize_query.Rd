@@ -10,9 +10,21 @@ standardize_query(query)
 \item{query}{The character query to standardize}
 }
 \value{
-The standardized query and its level
+The standardized query with its level, state (if applicable), and GEOID
 }
 \description{
 This function takes an input geographic unit query, and returns a standardized
 version of that query in Nucleus' format, or NA if no match exists.
+}
+\examples{
+\dontrun{
+standardize_query("USA")
+}
+\dontrun{
+standardize_query("Fort Worth, TX")
+}
+\dontrun{
+standardize_query("Fort Worth City, TX")
+}
+
 }

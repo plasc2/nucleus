@@ -16,6 +16,9 @@ inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold
   if (sf::st_is_longlat(units) == FALSE) {
     stop("Units must be provided in a geographic coordinate reference system.")
   }
+  if (nrow(units) == 0 | ncol(units) == 0) {
+    stop("Table has insufficient rows or columns.")
+  }
   centroids <- suppressWarnings(sf::st_centroid(units))
   t.out <- data.frame(START = rep(unlist(sf::st_drop_geometry(units[id_column])), each = nrow(units)), END = rep(unlist(sf::st_drop_geometry(units[id_column])), times = nrow(units)))
   coords_s <- sf::st_coordinates(centroids[match(t.out$START, unlist(sf::st_drop_geometry(centroids[id_column]))), ])
@@ -35,5 +38,6 @@ inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold
       stop("Threshold must be greater than 0.")
     }
   }
+  t.out <- t.out[c("START", "END", "D_KM")]
   return(t.out)
 }

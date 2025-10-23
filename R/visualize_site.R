@@ -137,6 +137,3 @@ visualize_site <- function(site, device = "jpg", output_directory) {
   }
   ggsave(file.path(output_directory, paste0("plot.", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
 }
-
-visualize_site("Dallas city, Texas", output_directory = r"(C:\Users\jremigio\OneDrive\Doctoral Studies\02 - Projects\25F-1 - Nucleus\Code)")
-visualize_site("Providence city, RI", output_directory = r"(C:\Users\jremigio\OneDrive\Doctoral Studies\02 - Projects\25F-1 - Nucleus\Code)")

@@ -3,12 +3,11 @@
 #' This function produces a minimalistic visualization of a given site.
 #'
 #' @param site A string or integer GEOID describing a geographic area in the U.S.
+#' @param device File output type as either jpg, png, or pdf.
+#' @param output_directory A folder to save the final plot.
 #' @return A map given argument 'device'
 #' @export
 #' 
-#' @examples
-#' \dontrun{
-#' visualize_site("Dallas city, Texas", output_directory = ...)
 #' 
 visualize_site <- function(site, device = "jpg", output_directory) {
   query <- standardize_query(site)
@@ -28,7 +27,7 @@ visualize_site <- function(site, device = "jpg", output_directory) {
     }
     if (as.numeric(query["LEVEL"]) > level_from_alias("County")) {
       t.bbox <- sf::st_as_sfc(sf::st_bbox(sf::st_buffer(t.unit, 10000)))
-      t.counties <- suppressMessages(sf::st_filter(counties(state = query["STATE"], cb = TRUE, year = 2020), t.bbox, .predicate = sf::st_intersects))
+      t.counties <- suppressMessages(sf::st_filter(tigris::counties(state = query["STATE"], cb = TRUE, year = 2020), t.bbox, .predicate = sf::st_intersects))
       t.counties <- t.counties$COUNTYFP
       for (i.county in t.counties) {
         i.roads.detail <- suppressMessages(tigris::roads(state = query["STATE"], county = i.county))
@@ -50,7 +49,7 @@ visualize_site <- function(site, device = "jpg", output_directory) {
     t.roads <- suppressMessages(tigris::primary_secondary_roads(query["STATE"]))
     t.roads <- sf::st_filter(t.roads, t.bbox, .predicate = sf::st_intersects)
     if (!exists("t.counties")) {
-      t.counties <- suppressMessages(sf::st_filter(counties(state = query["STATE"], cb = TRUE, year = 2020), t.bbox, .predicate = sf::st_intersects))
+      t.counties <- suppressMessages(sf::st_filter(tigris::counties(state = query["STATE"], cb = TRUE, year = 2020), t.bbox, .predicate = sf::st_intersects))
       t.counties <- t.counties$COUNTYFP
     }
     for (i.county in t.counties) {
@@ -71,63 +70,63 @@ visualize_site <- function(site, device = "jpg", output_directory) {
     if (nrow(t.unit) == 0) {
       stop("Failed to locate site.")
     }
-    t.bbox <- st_as_sfc(st_bbox(st_buffer(t.unit, 50000)))
+    t.bbox <- sf::st_as_sfc(sf::st_bbox(sf::st_buffer(t.unit, 50000)))
     t.roads <- suppressMessages(tigris::primary_roads())
-    t.roads <- st_filter(t.roads, t.bbox, .predicate = st_intersects)
+    t.roads <- sf::st_filter(t.roads, t.bbox, .predicate = sf::st_intersects)
   }
   if (exists("t.roads.detail")) {
     t.out <- ggplot2::ggplot() +
       ggplot2::geom_sf(data = t.bbox, fill = "#1E1E1E", color = NA) +
       ggplot2::geom_sf(data = t.water, fill = "#333333", color = NA) +
-      ggplot2::geom_sf(data = t.roads.detail, fill = NA, color = alpha("white", 0.7), linewidth = 0.1) +
-      ggplot2::geom_sf(data = t.roads, fill = NA, color = alpha("white", 0.80), linewidth = 0.15) +
-      ggplot2::geom_sf(data = t.unit, fill = NA, color = alpha("#1E1E1E", 0.5), linewidth = 3) +
+      ggplot2::geom_sf(data = t.roads.detail, fill = NA, color = ggplot2::alpha("white", 0.7), linewidth = 0.1) +
+      ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
+      ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
       ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
       ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
-      ggplot2::theme(axis.text.x=element_blank(),
-            axis.ticks.x=element_blank(),
-            axis.title.x=element_blank(),
-            axis.text.y=element_blank(),
-            axis.ticks.y=element_blank(),
-            axis.title.y=element_blank(),
+      ggplot2::theme(axis.text.x=ggplot2::element_blank(),
+            axis.ticks.x=ggplot2::element_blank(),
+            axis.title.x=ggplot2::element_blank(),
+            axis.text.y=ggplot2::element_blank(),
+            axis.ticks.y=ggplot2::element_blank(),
+            axis.title.y=ggplot2::element_blank(),
             legend.position="none",
-            plot.margin = margin(0, 0, 0, 0, "pt"),
-            panel.spacing = unit(0, "pt"))
+            plot.margin = ggplot2::margin(0, 0, 0, 0, "pt"),
+            panel.spacing = ggplot2::unit(0, "pt"))
   } else {
     if (exists("t.water")) {
       t.out <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = t.bbox, fill = "#1E1E1E", color = NA) +
         ggplot2::geom_sf(data = t.water, fill = "#212121", color = NA) +
-        ggplot2::geom_sf(data = t.roads, fill = NA, color = alpha("white", 0.80), linewidth = 0.15) +
-        ggplot2::geom_sf(data = t.unit, fill = NA, color = alpha("#1E1E1E", 0.5), linewidth = 3) +
+        ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
+        ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
         ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
-        ggplot2::theme(axis.text.x=element_blank(),
-                       axis.ticks.x=element_blank(),
-                       axis.title.x=element_blank(),
-                       axis.text.y=element_blank(),
-                       axis.ticks.y=element_blank(),
-                       axis.title.y=element_blank(),
+        ggplot2::theme(axis.text.x=ggplot2::element_blank(),
+                       axis.ticks.x=ggplot2::element_blank(),
+                       axis.title.x=ggplot2::element_blank(),
+                       axis.text.y=ggplot2::element_blank(),
+                       axis.ticks.y=ggplot2::element_blank(),
+                       axis.title.y=ggplot2::element_blank(),
                        legend.position="none",
-                       plot.margin = margin(0, 0, 0, 0, "pt"),
-                       panel.spacing = unit(0, "pt"))
+                       plot.margin = ggplot2::margin(0, 0, 0, 0, "pt"),
+                       panel.spacing = ggplot2::unit(0, "pt"))
     } else {
       t.out <- ggplot2::ggplot() +
         ggplot2::geom_sf(data = t.bbox, fill = "#1E1E1E", color = NA) +
-        ggplot2::geom_sf(data = t.roads, fill = NA, color = alpha("white", 0.80), linewidth = 0.15) +
-        ggplot2::geom_sf(data = t.unit, fill = NA, color = alpha("#1E1E1E", 0.5), linewidth = 3) +
+        ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
+        ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
         ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
-        ggplot2::theme(axis.text.x=element_blank(),
-                       axis.ticks.x=element_blank(),
-                       axis.title.x=element_blank(),
-                       axis.text.y=element_blank(),
-                       axis.ticks.y=element_blank(),
-                       axis.title.y=element_blank(),
+        ggplot2::theme(axis.text.x=ggplot2::element_blank(),
+                       axis.ticks.x=ggplot2::element_blank(),
+                       axis.title.x=ggplot2::element_blank(),
+                       axis.text.y=ggplot2::element_blank(),
+                       axis.ticks.y=ggplot2::element_blank(),
+                       axis.title.y=ggplot2::element_blank(),
                        legend.position="none",
-                       plot.margin = margin(0, 0, 0, 0, "pt"),
-                       panel.spacing = unit(0, "pt"))
+                       plot.margin = ggplot2::margin(0, 0, 0, 0, "pt"),
+                       panel.spacing = ggplot2::unit(0, "pt"))
     }
   }
-  ggsave(file.path(output_directory, paste0("plot.", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
+  ggplot2::ggsave(file.path(output_directory, paste0("plot.", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
 }

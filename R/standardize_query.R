@@ -252,37 +252,37 @@ standardize_query <- function(query) {
                LEVEL = k.geographies$LEVEL[k.geographies$GEOGRAPHY == "State"],
                GEOID = k.states$GEOID[c(which(toupper(k.states$NAME) == query), which(toupper(k.states$SHORT) == query))],
                STATE = "No state container"))
-    } else if (paste0(word(query, -2:-1), collapse = " ") %in% toupper(k.states$NAME) | word(query, -1) %in% toupper(k.states$NAME) | word(query, -1) %in% toupper(k.states$SHORT)) {
-      if (paste0(word(query, -2:-1), collapse = " ") %in% toupper(k.states$NAME)) {
-        t.container <- k.states$SHORT[toupper(k.states$NAME) == paste0(word(query, -2:-1), collapse = " ")]
-        query <- gsub(paste0(", ", paste0(word(query, -2:-1), collapse = " ")), "", query)
-        query <- gsub(paste0(" ", paste0(word(query, -2:-1), collapse = " ")), "", query)
-      } else if (word(query, -1) %in% toupper(k.states$NAME)) {
-        t.container <- k.states$SHORT[toupper(k.states$NAME) == word(query, -1)]
+    } else if (paste0(stringr::word(query, -2:-1), collapse = " ") %in% toupper(k.states$NAME) | stringr::word(query, -1) %in% toupper(k.states$NAME) | stringr::word(query, -1) %in% toupper(k.states$SHORT)) {
+      if (paste0(stringr::word(query, -2:-1), collapse = " ") %in% toupper(k.states$NAME)) {
+        t.container <- k.states$SHORT[toupper(k.states$NAME) == paste0(stringr::word(query, -2:-1), collapse = " ")]
+        query <- gsub(paste0(", ", paste0(stringr::word(query, -2:-1), collapse = " ")), "", query)
+        query <- gsub(paste0(" ", paste0(stringr::word(query, -2:-1), collapse = " ")), "", query)
+      } else if (stringr::word(query, -1) %in% toupper(k.states$NAME)) {
+        t.container <- k.states$SHORT[toupper(k.states$NAME) == stringr::word(query, -1)]
         if (sum(grepl(",", query)) > 0) {
-          query <- gsub(paste0(", ", word(query, -1)), "", query)
+          query <- gsub(paste0(", ", stringr::word(query, -1)), "", query)
         } else {
-          query <- gsub(paste0(" ", word(query, -1)), "", query)
+          query <- gsub(paste0(" ", stringr::word(query, -1)), "", query)
         }
       } else {
-        t.container <- word(query, -1)
+        t.container <- stringr::word(query, -1)
         if (sum(grepl(",", query)) > 0) {
-          query <- gsub(paste0(", ", word(query, -1)), "", query)
+          query <- gsub(paste0(", ", stringr::word(query, -1)), "", query)
         } else {
-          query <- gsub(paste0(" ", word(query, -1)), "", query)
+          query <- gsub(paste0(" ", stringr::word(query, -1)), "", query)
         }
       }
-      if (word(query, 1) %in% c("CITY", "TOWN", "VILLAGE", "BOROUGH") | word(query, -1) %in% c("CITY", "TOWN", "VILLAGE", "CDP", "BOROUGH")) {
-        if (paste0(word(query, 1:2), collapse = " ") == "CITY OF") {
+      if (stringr::word(query, 1) %in% c("CITY", "TOWN", "VILLAGE", "BOROUGH") | stringr::word(query, -1) %in% c("CITY", "TOWN", "VILLAGE", "CDP", "BOROUGH")) {
+        if (paste0(stringr::word(query, 1:2), collapse = " ") == "CITY OF") {
           query <- gsub("CITY OF ", "", query)
           query <- paste0(query, " CITY")
-        } else if (paste0(word(query, 1:2), collapse = " ") == "TOWN OF") {
+        } else if (paste0(stringr::word(query, 1:2), collapse = " ") == "TOWN OF") {
           query <- gsub("TOWN OF ", "", query)
           query <- paste0(query, " TOWN")
-        } else if (paste0(word(query, 1:2), collapse = " ") == "VILLAGE OF") {
+        } else if (paste0(stringr::word(query, 1:2), collapse = " ") == "VILLAGE OF") {
           query <- gsub("VILLAGE OF ", "", query)
           query <- paste0(query, " VILLAGE")
-        } else if (paste0(word(query, 1:2), collapse = " ") == "BOROUGH OF") {
+        } else if (paste0(stringr::word(query, 1:2), collapse = " ") == "BOROUGH OF") {
           query <- gsub("BOROUGH OF ", "", query)
           query <- paste0(query, " BOROUGH")
         }
@@ -296,7 +296,7 @@ standardize_query <- function(query) {
         } else {
           stop(paste0("No place with name ", query, "."))
         }
-      } else if (word(query, -1) == "COUNTY") {
+      } else if (stringr::word(query, -1) == "COUNTY") {
         t.reference <- suppressMessages(tigris::counties(state = t.container, year = 2020, cb = TRUE))
         return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMELSAD) == query],
                  GEOGRAPHY = "Place",
@@ -326,14 +326,14 @@ standardize_query <- function(query) {
           stop("Failed to classify geography.")
         }
       }
-    } else if (word(query, -1) == "MSA" | paste0(word(query, -2:-1), collapse = " ") %in% c("METRO AREA", "METROPOLITAN AREA") | paste0(word(query, -3:-1), collapse = " ") == "METROPOLITAN STATISTICAL AREA") {
-      if (word(query, -1) == "MSA") {
+    } else if (stringr::word(query, -1) == "MSA" | paste0(stringr::word(query, -2:-1), collapse = " ") %in% c("METRO AREA", "METROPOLITAN AREA") | paste0(stringr::word(query, -3:-1), collapse = " ") == "METROPOLITAN STATISTICAL AREA") {
+      if (stringr::word(query, -1) == "MSA") {
         query <- gsub(" MSA", "", query)
-      } else if (paste0(word(query, -2:-1), collapse = " ") == "METRO AREA") {
+      } else if (paste0(stringr::word(query, -2:-1), collapse = " ") == "METRO AREA") {
         query <- gsub(" METRO AREA", "", query)
-      } else if (paste0(word(query, -2:-1), collapse = " ") == "METROPOLITAN AREA") {
+      } else if (paste0(stringr::word(query, -2:-1), collapse = " ") == "METROPOLITAN AREA") {
         query <- gsub(" METROPOLITAN AREA", "", query)
-      } else if (paste0(word(query, -3:-1), collapse = " ") == "METROPOLITAN STATISTICAL AREA") {
+      } else if (paste0(stringr::word(query, -3:-1), collapse = " ") == "METROPOLITAN STATISTICAL AREA") {
         query <- gsub(" METROPOLITAN STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::metro_divisions(year = 2020))
@@ -347,10 +347,10 @@ standardize_query <- function(query) {
       } else {
         stop("Failed to clasify geography. Did you remember to add '-' in the MSA name?")
       }
-    } else if (word(query, -1) == "CSA" | paste0(word(query, -3:-1), collapse = " ") == "COMBINED STATISTICAL AREA") {
-      if (word(query, -1) == "CSA") {
+    } else if (stringr::word(query, -1) == "CSA" | paste0(stringr::word(query, -3:-1), collapse = " ") == "COMBINED STATISTICAL AREA") {
+      if (stringr::word(query, -1) == "CSA") {
         query <- gsub(" CSA", "", query)
-      } else if (paste0(word(query, -3:-1), collapse = " ") == "COMBINED STATISTICAL AREA") {
+      } else if (paste0(stringr::word(query, -3:-1), collapse = " ") == "COMBINED STATISTICAL AREA") {
         query <- gsub(" COMBINED STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::combined_statistical_areas(cb = TRUE, year = 2020))
@@ -364,12 +364,12 @@ standardize_query <- function(query) {
       } else {
         stop("Failed to clasify geography. Did you remember to add '-' in the CSA name?")
       }
-    } else if (word(query, -1) == "CBSA" | paste0(word(query, -3:-1), collapse = " ") == "CORE-BASED STATISTICAL AREA" | paste0(word(query, -4:-1), collapse = " ") == "CORE BASED STATISTICAL AREA") {
-      if (word(query, -1) == "CBSA") {
+    } else if (stringr::word(query, -1) == "CBSA" | paste0(stringr::word(query, -3:-1), collapse = " ") == "CORE-BASED STATISTICAL AREA" | paste0(stringr::word(query, -4:-1), collapse = " ") == "CORE BASED STATISTICAL AREA") {
+      if (stringr::word(query, -1) == "CBSA") {
         query <- gsub(" CBSA", "", query)
-      } else if (paste0(word(query, -3:-1), collapse = " ") == "CORE-BASED STATISTICAL AREA") {
+      } else if (paste0(stringr::word(query, -3:-1), collapse = " ") == "CORE-BASED STATISTICAL AREA") {
         query <- gsub(" CORE-BASED STATISTICAL AREA", "", query)
-      } else if (paste0(word(query, -4:-1), collapse = " ") == "CORE BASED STATISTICAL AREA") {
+      } else if (paste0(stringr::word(query, -4:-1), collapse = " ") == "CORE BASED STATISTICAL AREA") {
         query <- gsub(" CORE BASED STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::core_based_statistical_areas(cb = TRUE, year = 2020))

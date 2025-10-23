@@ -11,7 +11,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     tigris,
-    stringr
+    stringr,
+    ggplot2,
+    sf
 Depends: 
     R (>= 3.5)
 LazyData: true

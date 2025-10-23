@@ -10,12 +10,6 @@
 #' \dontrun{
 #' visualize_site("Dallas city, Texas", output_directory = ...)
 #' 
-library(nucleus)
-library(sf)
-library(tigris)
-library(ggplot2)
-site <- "Dallas city, TX"
-
 visualize_site <- function(site, device = "jpg", output_directory) {
   query <- standardize_query(site)
   if (length(query) != 1 & typeof(query) != "character") {

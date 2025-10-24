@@ -8,7 +8,6 @@
 #' @param threshold Optional upper distance limit, distance values above (non-inclusive) the threshold will be omitted
 #' @return A table of inter-unit distances in kilometers, with a 'START' and 'END' column identifying units
 #' @export
-
 inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold = NULL) {
   if (sum(duplicated(unlist(sf::st_drop_geometry(units[id_column])))) > 0) {
     stop("Duplicate IDs detected.")

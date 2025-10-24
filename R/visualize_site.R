@@ -14,9 +14,9 @@ visualize_site <- function(site, device = "jpg", output_directory) {
   if (length(query) != 1 & typeof(query) != "character") {
     stop("Site must produce query of length 1. If passing a string, be sure to add identifiers like 'city', 'village', 'metropolitan area', etc.")
   }
-  f.get <- getFromNamespace(k.geographies$ID_TIGRIS[as.numeric(query["LEVEL"])], "tigris")
-  if (as.numeric(query["LEVEL"]) > level_from_alias("State") & !as.numeric(query["LEVEL"]) %in% level_from_alias(c("CSA", "CBSA", "MSA"))) {
-    if (!as.numeric(query["LEVEL"]) %in% level_from_alias(c("ZIP Code", "Block"))) {
+  f.get <- utils::getFromNamespace(nucleus::k.geographies$ID_TIGRIS[as.numeric(query["LEVEL"])], "tigris")
+  if (as.numeric(query["LEVEL"]) > nucleus::level_from_alias("State") & !as.numeric(query["LEVEL"]) %in% nucleus::level_from_alias(c("CSA", "CBSA", "MSA"))) {
+    if (!as.numeric(query["LEVEL"]) %in% nucleus::level_from_alias(c("ZIP Code", "Block"))) {
       t.unit <- suppressMessages(f.get(state = query["STATE"], year = 2020, cb = TRUE))
     } else {
       t.unit <- suppressMessages(f.get(state = query["STATE"], year = 2020))
@@ -25,7 +25,7 @@ visualize_site <- function(site, device = "jpg", output_directory) {
     if (nrow(t.unit) == 0) {
       stop("Failed to locate site.")
     }
-    if (as.numeric(query["LEVEL"]) > level_from_alias("County")) {
+    if (as.numeric(query["LEVEL"]) > nucleus::level_from_alias("County")) {
       t.bbox <- sf::st_as_sfc(sf::st_bbox(sf::st_buffer(t.unit, 10000)))
       t.counties <- suppressMessages(sf::st_filter(tigris::counties(state = query["STATE"], cb = TRUE, year = 2020), t.bbox, .predicate = sf::st_intersects))
       t.counties <- t.counties$COUNTYFP

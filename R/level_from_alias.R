@@ -16,6 +16,6 @@
 #' }
 #' 
 level_from_alias <- function(query) {
-  t.level <- k.geographies$LEVEL[grepl(paste0(toupper(paste0("'", query, "'")), collapse = "|"), toupper(k.geographies$ALIAS))]
+  t.level <- nucleus::k.geographies$LEVEL[grepl(paste0(toupper(paste0("'", query, "'")), collapse = "|"), toupper(nucleus::k.geographies$ALIAS))]
   return(t.level)
 }

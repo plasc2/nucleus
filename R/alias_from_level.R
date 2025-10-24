@@ -16,7 +16,7 @@
 #' }
 #' 
 alias_from_level <- function(query) {
-  t.alias <- unlist(strsplit(k.geographies$ALIAS[query], split = ", "))
+  t.alias <- unlist(strsplit(nucleus::k.geographies$ALIAS[query], split = ", "))
   t.alias <- gsub("'", "", t.alias)
   return(t.alias)
 }

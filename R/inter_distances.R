@@ -38,6 +38,9 @@ inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold
       stop("Threshold must be greater than 0.")
     }
   }
-  t.out <- t.out[c("START", "END", "D_KM")]
+  t.out$START_X <- NULL
+  t.out$START_Y <- NULL
+  t.out$END_X <- NULL
+  t.out$END_Y <- NULL
   return(t.out)
 }

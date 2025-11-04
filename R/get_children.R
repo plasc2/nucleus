@@ -70,9 +70,17 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
       t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
     }
   } else {
-    query <- standardize_query(query)
-    if (typeof(query) == "list" & length(query) > 1) {
-      stop("Multiple matches received from 'standardize_query'.")
+    if (typeof(query) == "character" & length(query) == 1) {
+      query <- nucleus::standardize_query(query)
+      if (typeof(query) == "list" & length(query) > 1) {
+        stop("Multiple matches received from 'standardize_query'.")
+      }
+    } else {
+      if (paste0(names(query), collapse = "") == paste0(c("NAME", "GEOGRAPHY", "LEVEL", "GEOID", "STATE"), collapse = "")) {
+        query <- query
+      } else {
+        stop("Invalid query.")
+      }
     }
     if (query["STATE"] != "No state container") {
       f.unit <- utils::getFromNamespace(nucleus::k.geographies$ID_TIGRIS[as.numeric(query["LEVEL"])], "tigris")

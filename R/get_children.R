@@ -46,6 +46,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
       if (exists("t.states") & exists("t.counties")) {
         for (i.state in 1:length(t.states)) {
           i.children <- f.get(state = t.states[[i.state]], county = t.counties[i.state], year = year)
+          i.children <- sf::st_make_valid(i.children)
           if (!exists("t.children")) {
             t.children <- i.children
           } else {
@@ -56,6 +57,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
       } else if (exists("t.states") & !exists("t.counties")) {
         for (i.state in 1:length(t.states)) {
           i.children <- f.get(state = t.states[[i.state]], year = year)
+          i.children <- sf::st_make_valid(i.children)
           if (!exists("t.children")) {
             t.children <- i.children
           } else {
@@ -67,6 +69,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
     } else {
       f.get <- utils::getFromNamespace(nucleus::k.geographies$ID_TIGRIS[as.numeric(children)], "tigris")
       t.children <- f.get(year = year)
+      t.children <- sf::st_make_valid(t.children)
       t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
     }
   } else {
@@ -90,19 +93,24 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
         stop("Failed to locate geometry.")
       }
       t.counties <- tigris::counties(state = query["STATE"], cb = TRUE, year = 2020)
+      t.counties <- sf::st_make_valid(t.counties)
       t.counties <- sf::st_filter(t.counties, t.unit, .predicate = sf::st_intersects)
       t.counties <- t.counties$COUNTYFP
       f.get <- utils::getFromNamespace(nucleus::k.geographies$ID_TIGRIS[as.numeric(children)], "tigris")
       t.children <- f.get(state = query["STATE"], county = t.counties, year = year)
+      t.children <- sf::st_make_valid(t.children)
     } else {
       t.unit <- nucleus::pull_geometry(query, year = year)
+      t.unit <- sf::st_make_valid(t.unit)
       
       if (children > nucleus::level_from_alias("State")) {
         t.states <- tigris::states(cb = TRUE, year = 2020)
+        t.states <- sf::st_make_valid(t.states)
         t.states <- sf::st_filter(t.states, t.unit, .predicate = sf::st_intersects)
         t.states <- t.states$STUSPS
         for (i.state in t.states) {
           i.counties <- tigris::counties(state = i.state, cb = TRUE, year = 2020)
+          i.counties <- sf::st_make_valid(i.counties)
           t.row <- nrow(i.counties)
           i.counties <- sf::st_filter(i.counties, t.unit, .predicate = sf::st_intersects)
           if (nrow(i.counties) == t.row) {
@@ -126,6 +134,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
         if (exists("t.states") & exists("t.counties")) {
           for (i.state in 1:length(t.states)) {
             i.children <- f.get(state = t.states[i.state], county = t.counties[[i.state]], year = year)
+            i.children <- sf::st_make_valid(i.children)
             if (!exists("t.children")) {
               t.children <- i.children
             } else {
@@ -136,6 +145,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
         } else if (exists("t.states") & !exists("t.counties")) {
           for (i.state in 1:length(t.states)) {
             i.children <- f.get(state = t.states[[i.state]], year = year)
+            i.children <- sf::st_make_valid(i.children)
             if (!exists("t.children")) {
               t.children <- i.children
             } else {
@@ -146,6 +156,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
         } else {
           f.get <- utils::getFromNamespace(nucleus::k.geographies$ID_TIGRIS[as.numeric(children)], "tigris")
           t.children <- f.get(year = year)
+          t.children <- sf::st_make_valid(t.children)
           t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
         }
       }
@@ -153,16 +164,20 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
   }
   if (!exists("t.unit")) {
     t.unit <- query
+    t.unit <- sf::st_make_valid(t.unit)
   }
   if (toupper(mode) == "INTERSECTS") {
     t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
+    t.children <- sf::st_make_valid(t.children)
     return(t.children)
   } else if (toupper(mode) == "CONTAINS") {
     t.children <- t.children[unlist(sf::st_contains(t.unit, t.children)), ]
+    t.children <- sf::st_make_valid(t.children)
     return(t.children)
   } else if (toupper(mode) == "CONTAINS_MAJORITY") {
     # Units where %t of area in container
     t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
+    t.children <- sf::st_make_valid(t.children)
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))
@@ -172,6 +187,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
   } else if (toupper(mode) == "MAJORITY_CONTAINED") {
     # Units where %t of container is filled by unit
     t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
+    t.children <- sf::st_make_valid(t.children)
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))
@@ -180,6 +196,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
   } else {
     # Both above methods
     t.children <- sf::st_filter(t.children, t.unit, .predicate = sf::st_intersects)
+    t.children <- sf::st_make_valid(t.children)
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))

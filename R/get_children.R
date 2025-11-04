@@ -181,6 +181,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))
+    t.intersect <- sf::st_make_valid(t.intersect)
     t.children <- t.children[sf::st_area(t.intersect)[match(t.children$GEOID_B, t.intersect$GEOID_B)] >= threshold * sf::st_area(t.children), ]
     t.children$GEOID_B <- NULL
     return(t.children)
@@ -191,6 +192,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))
+    t.intersect <- sf::st_make_valid(t.intersect)
     t.children <- t.children[t.children$GEOID %in% t.intersect$GEOID[sf::st_area(t.intersect) >= threshold * sf::st_area(t.unit)], ]
     return(t.children)
   } else {
@@ -200,6 +202,7 @@ get_children <- function(query, children, year, mode, threshold = 0.1) {
     t.unit$GEOID_A <- t.unit$GEOID
     t.children$GEOID_B <- t.children$GEOID
     t.intersect <- suppressWarnings(sf::st_intersection(t.children, t.unit))
+    t.intersect <- sf::st_make_valid(t.intersect)
     i.contains_majority <- which(sf::st_area(t.intersect)[match(t.children$GEOID_B, t.intersect$GEOID_B)] >= threshold * sf::st_area(t.children))
     i.majorty_contained <- which(t.children$GEOID %in% t.intersect$GEOID[sf::st_area(t.intersect) >= threshold * sf::st_area(t.unit)])
     t.children <- t.children[unique(c(i.contains_majority, i.majorty_contained)), ]

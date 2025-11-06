@@ -18,6 +18,7 @@
 #' standardize_query("Fort Worth City, TX")
 #' }
 #' 
+query <- "nashville-davidson balance"
 standardize_query <- function(query) {
   if (length(query) != 1) {
     stop("Multiple inputs forbidden. Query must be of length 1.")
@@ -404,7 +405,51 @@ standardize_query <- function(query) {
         stop("Failed to clasify geography. Did you remember to add '-' in the CBSA name?")
       }
     } else {
-      if (query == "NYC" | query == "NEW YORK CITY") {
+      if (grepl("BALANCE", query)) {
+        t.query <- trimws(unlist(strsplit(trimws(unlist(strsplit(query, ","))), " ")))
+        if (t.query[length(t.query)] %in% c(nucleus::k.states$SHORT, toupper(nucleus::k.states$NAME))) {
+          if (t.query[length(t.query)] %in% nucleus::k.states$SHORT) {
+            t.reference <- suppressMessages(tigris::places(state = t.query[length(t.query)], cb = TRUE))
+          } else {
+            t.reference <- suppressMessages(tigris::places(state = nucleus::k.states$SHORT[toupper(nucleus::k.states$NAME) == t.query[length(t.query)]], cb = TRUE))
+          }
+          t.reference$NAMELSAD_ADJ <- gsub("/", "-", t.reference$NAMELSAD)
+          t.reference$NAMELSAD_ADJ <- gsub("metropolitan government \\(balance\\)", "balance", t.reference$NAMELSAD_ADJ)
+          t.reference$NAMELSAD_ADJ <- gsub("metro government \\(balance\\)", "balance", t.reference$NAMELSAD_ADJ)
+          t.reference$NAMELSAD_ADJ <- gsub("\\(balance\\)", "balance", t.reference$NAMELSAD_ADJ)
+          t.reference$NAMELSAD_ADJ <- toupper(t.reference$NAMELSAD_ADJ)
+          if (t.query[length(t.query)] %in% nucleus::k.states$SHORT) {
+            if (sum(grepl(",", query)) > 0) {
+              t.reference$MATCH <- paste0(t.reference$NAMELSAD_ADJ, ", ", t.query[length(t.query)])
+            } else {
+              t.reference$MATCH <- paste0(t.reference$NAMELSAD_ADJ, " ", t.query[length(t.query)])
+            }
+          } else {
+            if (sum(grepl(",", query)) > 0) {
+              t.reference$MATCH <- paste0(t.reference$NAMELSAD_ADJ, ", ", nucleus::k.states$SHORT[toupper(nucleus::k.states$NAME) == t.query[length(t.query)]])
+            } else {
+              t.reference$MATCH <- paste0(t.reference$NAMELSAD_ADJ, " ", nucleus::k.states$SHORT[toupper(nucleus::k.states$NAME) == t.query[length(t.query)]])
+            }
+          }
+          if (query %in% t.reference$NAMELSAD_ADJ) {
+            return(c(NAME = t.reference$NAMELSAD[t.reference$NAMELSAD_ADJ == query],
+                     GEOGRAPHY = "Place",
+                     LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Place"],
+                     GEOID = t.reference$GEOID[t.reference$NAMELSAD_ADJ == query],
+                     STATE = ifelse(t.query[length(t.query)] %in% nucleus::k.states$SHORT, t.query[length(t.query)], nucleus::k.states$SHORT[toupper(nucleus::k.states$NAME) == t.query[length(t.query)]])))
+          } else if (query %in% t.reference$MATCH) {
+            return(c(NAME = t.reference$NAMELSAD[t.reference$MATCH == query],
+                     GEOGRAPHY = "Place",
+                     LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Place"],
+                     GEOID = t.reference$GEOID[t.reference$MATCH == query],
+                     STATE = ifelse(t.query[length(t.query)] %in% nucleus::k.states$SHORT, t.query[length(t.query)], nucleus::k.states$SHORT[toupper(nucleus::k.states$NAME) == t.query[length(t.query)]])))
+          } else {
+            stop("Failed to classify balance.")
+          }
+        } else {
+          stop("Failed to classify balance with no referenced state container.")
+        }
+      } else if (query == "NYC" | query == "NEW YORK CITY") {
         t.reference <- suppressMessages(tigris::places(state = "NY", cb = TRUE, year = 2020))
         return(c(NAME = "New York city",
                  GEOGRAPHY = "Place",

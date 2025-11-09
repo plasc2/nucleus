@@ -9,8 +9,12 @@
 #' @export
 #' 
 #' 
-visualize_site <- function(site, device = "jpg", output_directory) {
-  query <- standardize_query(site)
+visualize_site <- function(site, device = "jpg", output_directory, output_name) {
+  if (typeof(site) == "character") {
+    query <- site
+  } else {
+    query <- standardize_query(site)
+  }
   if (length(query) != 1 & typeof(query) != "character") {
     stop("Site must produce query of length 1. If passing a string, be sure to add identifiers like 'city', 'village', 'metropolitan area', etc.")
   }
@@ -128,5 +132,5 @@ visualize_site <- function(site, device = "jpg", output_directory) {
                        panel.spacing = ggplot2::unit(0, "pt"))
     }
   }
-  ggplot2::ggsave(file.path(output_directory, paste0("plot.", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
+  ggplot2::ggsave(file.path(output_directory, paste0(output_name, ".", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
 }

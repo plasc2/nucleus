@@ -14,7 +14,8 @@ Imports:
     stringr,
     ggplot2,
     sf,
-    geosphere
+    geosphere,
+    magick,
 Depends: 
     R (>= 3.5)
 LazyData: true

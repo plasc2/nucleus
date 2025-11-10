@@ -9,11 +9,16 @@
 #' @export
 #' 
 #' 
-visualize_site <- function(site, device = "jpg", output_directory, output_name) {
-  if (typeof(site) == "character") {
+visualize_site <- function(site, output_name) {
+  if (typeof(site) == "character" & length(site) > 1) {
     query <- site
   } else {
     query <- standardize_query(site)
+  }
+  if (!substr(output_name, (nchar(output_name) - 2), nchar(output_name)) %in% c("jpg", "png", "pdf")) {
+    stop("Unsupported output device")
+  } else {
+    device = substr(output_name, (nchar(output_name) - 2), nchar(output_name))
   }
   if (length(query) != 1 & typeof(query) != "character") {
     stop("Site must produce query of length 1. If passing a string, be sure to add identifiers like 'city', 'village', 'metropolitan area', etc.")
@@ -78,6 +83,26 @@ visualize_site <- function(site, device = "jpg", output_directory, output_name) 
     t.roads <- suppressMessages(tigris::primary_roads())
     t.roads <- sf::st_filter(t.roads, t.bbox, .predicate = sf::st_intersects)
   }
+  
+  xmid <- as.numeric(sf::st_bbox(t.bbox)["xmin"] + sf::st_bbox(t.bbox)["xmax"]) / 2
+  ymid <- as.numeric(sf::st_bbox(t.bbox)["ymin"] + sf::st_bbox(t.bbox)["ymax"]) / 2
+  width <- as.numeric(sf::st_bbox(t.bbox)["xmax"] - sf::st_bbox(t.bbox)["xmin"])
+  height <- as.numeric(sf::st_bbox(t.bbox)["ymax"] - sf::st_bbox(t.bbox)["ymin"])
+  
+  half_side <- max(width, height) / 2
+  
+  x_scale_factor <- (suppressWarnings(as.vector(sf::st_coordinates(sf::st_centroid(t.unit)))[1]) * .0021) + 1.4511
+  
+  t.bbox.adj <- c(
+    xmin = xmid - half_side * x_scale_factor,
+    xmax = xmid + half_side * x_scale_factor,
+    ymin = ymid - half_side,
+    ymax = ymid + half_side
+  )
+  
+  t.bbox <- sf::st_as_sfc(sf::st_bbox(t.bbox.adj, crs = sf::st_crs(t.unit)))
+  rm(t.bbox.adj)
+  
   if (exists("t.roads.detail")) {
     t.out <- ggplot2::ggplot() +
       ggplot2::geom_sf(data = t.bbox, fill = "#1E1E1E", color = NA) +
@@ -86,7 +111,11 @@ visualize_site <- function(site, device = "jpg", output_directory, output_name) 
       ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
       ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
       ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
-      ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
+      ggplot2::coord_sf(
+        xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]),
+        ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]),
+        expand = FALSE, clip = "on"
+      ) +
       ggplot2::theme(axis.text.x=ggplot2::element_blank(),
             axis.ticks.x=ggplot2::element_blank(),
             axis.title.x=ggplot2::element_blank(),
@@ -104,7 +133,11 @@ visualize_site <- function(site, device = "jpg", output_directory, output_name) 
         ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
-        ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
+        ggplot2::coord_sf(
+          xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]),
+          ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]),
+          expand = FALSE, clip = "on"
+        ) +
         ggplot2::theme(axis.text.x=ggplot2::element_blank(),
                        axis.ticks.x=ggplot2::element_blank(),
                        axis.title.x=ggplot2::element_blank(),
@@ -120,7 +153,11 @@ visualize_site <- function(site, device = "jpg", output_directory, output_name) 
         ggplot2::geom_sf(data = t.roads, fill = NA, color = ggplot2::alpha("white", 0.80), linewidth = 0.15) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = ggplot2::alpha("#1E1E1E", 0.5), linewidth = 3) +
         ggplot2::geom_sf(data = t.unit, fill = NA, color = "white", linewidth = 0.75) +
-        ggplot2::coord_sf(xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]), ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]), expand = FALSE, clip = "on") +
+        ggplot2::coord_sf(
+          xlim = c(sf::st_bbox(t.bbox)["xmin"], sf::st_bbox(t.bbox)["xmax"]),
+          ylim = c(sf::st_bbox(t.bbox)["ymin"], sf::st_bbox(t.bbox)["ymax"]),
+          expand = FALSE, clip = "on"
+        ) +
         ggplot2::theme(axis.text.x=ggplot2::element_blank(),
                        axis.ticks.x=ggplot2::element_blank(),
                        axis.title.x=ggplot2::element_blank(),
@@ -132,5 +169,11 @@ visualize_site <- function(site, device = "jpg", output_directory, output_name) 
                        panel.spacing = ggplot2::unit(0, "pt"))
     }
   }
-  ggplot2::ggsave(file.path(output_directory, paste0(output_name, ".", device)), plot = t.out, device = device, width = 2000, height = 2000, units = "px")
+  ggplot2::ggsave(output_name, plot = t.out, device = device, width = 2000, height = 2000, units = "px")
+  t.img <- magick::image_read(output_name)
+  t.info <- magick::image_info(t.img)
+  t.w <- t.info$width
+  t.h <- t.info$height
+  t.crop <- magick::image_crop(t.img, geometry = sprintf("%dx%d+80+80", t.w - 160, t.h - 160))
+  magick::image_write(t.crop, path = output_name, format = device)
 }

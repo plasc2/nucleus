@@ -18,6 +18,7 @@
 #' standardize_query("Fort Worth City, TX")
 #' }
 #' 
+
 standardize_query <- function(query) {
   if (length(query) != 1) {
     stop("Multiple inputs forbidden. Query must be of length 1.")
@@ -326,7 +327,7 @@ standardize_query <- function(query) {
           stop("Failed to classify geography.")
         }
       }
-    } else if (suppressWarnings(stringr::word(query, -1)) == "MSA" | suppressWarnings(paste0(suppressWarnings(stringr::word(query, -2:-1)), collapse = " ")) %in% c("METRO AREA", "METROPOLITAN AREA") | paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "METROPOLITAN STATISTICAL AREA") {
+    } else if (suppressWarnings(stringr::word(query, -1)) == "MSA" | suppressWarnings(paste0(suppressWarnings(stringr::word(query, -2:-1)), collapse = " ")) %in% c("METRO AREA", "METROPOLITAN AREA") | paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "METROPOLITAN STATISTICAL AREA" | sum(grepl(" MSA", query)) > 0) {
       if (suppressWarnings(stringr::word(query, -1)) == "MSA") {
         query <- gsub(" MSA", "", query)
       } else if (paste0(suppressWarnings(stringr::word(query, -2:-1)), collapse = " ") == "METRO AREA") {
@@ -337,7 +338,7 @@ standardize_query <- function(query) {
         query <- gsub(" METROPOLITAN STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::metro_divisions(year = 2020))
-      t.reference$NAMETEMP <- sub("\\,.*", "", t.reference$NAME)
+      t.reference$NAMETEMP <- toupper(sub("\\,.*", "", t.reference$NAME))
       if (query %in% toupper(t.reference$NAMETEMP)) {
         return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
                  GEOGRAPHY = "Metropolitan Division",
@@ -345,17 +346,16 @@ standardize_query <- function(query) {
                  GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
                  STATE = "No state container"))
       } else {
-        t.reference <- suppressMessages(tigris::core_based_statistical_areas(year = 2020, cb = TRUE))
-        t.reference$NAMETEMP <- sub("\\,.*", "", t.reference$NAME)
+        t.reference$NAMETEMP <- gsub("-", " ", t.reference$NAMETEMP)
         if (query %in% toupper(t.reference$NAMETEMP)) {
           return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
-                   GEOGRAPHY = "Core-Based Statistical Area",
-                   LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Core-Based Statistical Area"],
+                   GEOGRAPHY = "Metropolitan Division",
+                   LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Metropolitan Division"],
                    GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
                    STATE = "No state container"))
         } else {
           t.reference <- suppressMessages(tigris::core_based_statistical_areas(year = 2020, cb = TRUE))
-          t.reference$NAMETEMP <- t.reference$NAME
+          t.reference$NAMETEMP <- toupper(sub("\\,.*", "", t.reference$NAME))
           if (query %in% toupper(t.reference$NAMETEMP)) {
             return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
                      GEOGRAPHY = "Core-Based Statistical Area",
@@ -363,18 +363,36 @@ standardize_query <- function(query) {
                      GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
                      STATE = "No state container"))
           } else {
-            stop("Failed to clasify geography. Did you remember to add '-' in the MSA name?")
+            t.reference$NAMETEMP <- gsub("-", " ", t.reference$NAMETEMP)
+            if (query %in% toupper(t.reference$NAMETEMP)) {
+              return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
+                       GEOGRAPHY = "Core-Based Statistical Area",
+                       LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Core-Based Statistical Area"],
+                       GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
+                       STATE = "No state container"))
+            } else {
+              t.reference$NAMETEMP <- toupper(t.reference$NAME)
+              if (query %in% toupper(t.reference$NAMETEMP)) {
+                return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
+                         GEOGRAPHY = "Core-Based Statistical Area",
+                         LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Core-Based Statistical Area"],
+                         GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
+                         STATE = "No state container"))
+              } else {
+                stop("Failed to clasify geography. Did you remember to add '-' in the MSA name?")
+              }
+            }
           }
         }
       }
     } else if (suppressWarnings(stringr::word(query, -1)) == "CSA" | paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "COMBINED STATISTICAL AREA") {
-      if (suppressWarnings(stringr::word(query, -1)) == "CSA") {
+      if (suppressWarnings(stringr::word(query, -1)) == "CSA" | sum(grepl(" CSA", query)) > 0) {
         query <- gsub(" CSA", "", query)
       } else if (paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "COMBINED STATISTICAL AREA") {
         query <- gsub(" COMBINED STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::combined_statistical_areas(cb = TRUE, year = 2020))
-      t.reference$NAMETEMP <- sub("\\,.*", "", t.reference$NAME)
+      t.reference$NAMETEMP <- toupper(sub("\\,.*", "", t.reference$NAME))
       if (query %in% toupper(t.reference$NAMETEMP)) {
         return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
                  GEOGRAPHY = "Combined Statistical Area",
@@ -382,9 +400,18 @@ standardize_query <- function(query) {
                  GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
                  STATE = "No state container"))
       } else {
-        stop("Failed to clasify geography. Did you remember to add '-' in the CSA name?")
+        t.reference$NAMETEMP <- gsub("-", " ", t.reference$NAMETEMP)
+        if (query %in% toupper(t.reference$NAMETEMP)) {
+          return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
+                   GEOGRAPHY = "Combined Statistical Area",
+                   LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Combined Statistical Area"],
+                   GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
+                   STATE = "No state container"))
+        } else {
+          stop("Failed to clasify geography. Did you remember to add '-' in the CSA name?")
+        }
       }
-    } else if (suppressWarnings(stringr::word(query, -1)) == "CBSA" | paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "CORE-BASED STATISTICAL AREA" | paste0(suppressWarnings(stringr::word(query, -4:-1)), collapse = " ") == "CORE BASED STATISTICAL AREA") {
+    } else if (suppressWarnings(stringr::word(query, -1)) == "CBSA" | paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "CORE-BASED STATISTICAL AREA" | paste0(suppressWarnings(stringr::word(query, -4:-1)), collapse = " ") == "CORE BASED STATISTICAL AREA" | sum(grepl(" CBSA", query)) > 0) {
       if (suppressWarnings(stringr::word(query, -1)) == "CBSA") {
         query <- gsub(" CBSA", "", query)
       } else if (paste0(suppressWarnings(stringr::word(query, -3:-1)), collapse = " ") == "CORE-BASED STATISTICAL AREA") {
@@ -393,7 +420,7 @@ standardize_query <- function(query) {
         query <- gsub(" CORE BASED STATISTICAL AREA", "", query)
       }
       t.reference <- suppressMessages(tigris::core_based_statistical_areas(cb = TRUE, year = 2020))
-      t.reference$NAMETEMP <- sub("\\,.*", "", t.reference$NAME)
+      t.reference$NAMETEMP <- toupper(sub("\\,.*", "", t.reference$NAME))
       if (query %in% toupper(t.reference$NAMETEMP)) {
         return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
                  GEOGRAPHY = "Combined Statistical Area",
@@ -401,7 +428,25 @@ standardize_query <- function(query) {
                  GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
                  STATE = "No state container"))
       } else {
-        stop("Failed to clasify geography. Did you remember to add '-' in the CBSA name?")
+        t.reference$NAMETEMP <- gsub("-", " ", t.reference$NAMETEMP)
+        if (query %in% toupper(t.reference$NAMETEMP)) {
+          return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
+                   GEOGRAPHY = "Combined Statistical Area",
+                   LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Combined Statistical Area"],
+                   GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
+                   STATE = "No state container"))
+        } else {
+          t.reference$NAMETEMP <- toupper(t.reference$NAME)
+          if (query %in% toupper(t.reference$NAMETEMP)) {
+            return(c(NAME = t.reference$NAMELSAD[toupper(t.reference$NAMETEMP) == query],
+                     GEOGRAPHY = "Combined Statistical Area",
+                     LEVEL = nucleus::k.geographies$LEVEL[nucleus::k.geographies$GEOGRAPHY == "Combined Statistical Area"],
+                     GEOID = t.reference$GEOID[toupper(t.reference$NAMETEMP) == query],
+                     STATE = "No state container"))
+          } else {
+            stop("Failed to clasify geography. Did you remember to add '-' in the CBSA name?")
+          }
+        }
       }
     } else {
       if (grepl("BALANCE", query)) {

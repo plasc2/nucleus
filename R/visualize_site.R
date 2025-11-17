@@ -174,6 +174,6 @@ visualize_site <- function(site, output_name) {
   t.info <- magick::image_info(t.img)
   t.w <- t.info$width
   t.h <- t.info$height
-  t.crop <- magick::image_crop(t.img, geometry = sprintf("%dx%d+80+80", t.w - 160, t.h - 160))
+  t.crop <- magick::image_crop(t.img, geometry = sprintf("%dx%d+100+100", t.w - 200, t.h - 200))
   magick::image_write(t.crop, path = output_name, format = device)
 }

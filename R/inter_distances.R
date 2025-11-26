@@ -10,6 +10,11 @@
 #' @export
 
 inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold = NULL, interior_ids = NULL) {
+  if (!is.null(threshold)) {
+    if (threshold <= 0) {
+      stop("Threshold must be greater than 0.")
+    }
+  }
   if (sum(duplicated(unlist(sf::st_drop_geometry(units[id_column])))) > 0) {
     stop("Duplicate IDs detected.")
   }
@@ -19,27 +24,29 @@ inter_distances <- function(units, id_column = "GEOID", na.rm = FALSE, threshold
   if (nrow(units) == 0 | ncol(units) == 0) {
     stop("Table has insufficient rows or columns.")
   }
+  t_idcolumn <- unlist(sf::st_drop_geometry(units[id_column]))
+  if (is.null(interior_ids)) {
+    t.out <- data.frame(START = rep(t_idcolumn, each = nrow(units)),
+                        END = rep(t_idcolumn, times = nrow(units)))
+  } else {
+    t.out <- data.frame(START = rep(interior_ids[interior_ids %in% t_idcolumn], each = nrow(units)),
+                        END = rep(t_idcolumn, times = length(interior_ids[interior_ids %in% t_idcolumn])))
+  }
   centroids <- suppressWarnings(sf::st_centroid(units))
-  t.out <- data.frame(START = rep(unlist(sf::st_drop_geometry(units[id_column])), each = nrow(units)), END = rep(unlist(sf::st_drop_geometry(units[id_column])), times = nrow(units)))
-  coords_s <- sf::st_coordinates(centroids[match(t.out$START, unlist(sf::st_drop_geometry(centroids[id_column]))), ])
-  coords_e <- sf::st_coordinates(centroids[match(t.out$END, unlist(sf::st_drop_geometry(centroids[id_column]))), ])
+  
+  coords_s <- sf::st_coordinates(centroids[match(t.out$START, t_idcolumn), ])
   t.out$START_X <- coords_s[, 2]
   t.out$START_Y <- coords_s[, 1]
+  coords_e <- sf::st_coordinates(centroids[match(t.out$END, t_idcolumn), ])
   t.out$END_X <- coords_e[, 2]
   t.out$END_Y <- coords_e[, 1]
-  if (!is.null(interior_ids)) {
-    t.out <- t.out[t.out$START %in% interior_ids | t.out$END %in% interior_ids, ]
-  }
+  rm(centroids)
   t.out$D_KM <- mapply(function(s, e) geosphere::distGeo(s,e) / 1000, split(coords_s, row(coords_s)), split(coords_e, row(coords_e)))
   if (na.rm == TRUE) {
     t.out <- t.out[!is.na(t.out$D_KM), ]
   }
   if (!is.null(threshold)) {
-    if (threshold > 0) {
-      t.out <- t.out[t.out$D_KM <= threshold, ]
-    } else {
-      stop("Threshold must be greater than 0.")
-    }
+    t.out <- t.out[t.out$D_KM <= threshold, ]
   }
   t.out$START_X <- NULL
   t.out$START_Y <- NULL
